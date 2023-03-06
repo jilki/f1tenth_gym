@@ -144,11 +144,13 @@ class F110Env(gym.Env):
         except:
             self.ego_idx = 0
 
-        # default integrator
+        # colab
         try:
-            self.integrator = kwargs['integrator']
+            import google.colab
+            self.in_colab = True
+            self.done = False
         except:
-            self.integrator = Integrator.RK4
+            self.in_colab = False
 
         # radius to consider done
         self.start_thresh = 0.5  # 10cm
