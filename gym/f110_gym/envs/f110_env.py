@@ -376,35 +376,43 @@ class F110Env(gym.Env):
 
         F110Env.render_callbacks.append(callback_func)
 
-    def render(self, mode='human'):
-        """
-        Renders the environment with pyglet. Use mouse scroll in the window to zoom in/out, use mouse click drag to pan. Shows the agents, the map, current fps (bottom left corner), and the race information near as text.
-
-        Args:
-            mode (str, default='human'): rendering mode, currently supports:
-                'human': slowed down rendering such that the env is rendered in a way that sim time elapsed is close to real time elapsed
-                'human_fast': render as fast as possible
-
-        Returns:
-            None
-        """
-        assert mode in ['human', 'human_fast']
-        
-        if F110Env.renderer is None:
-            # first call, initialize everything
-            from f110_gym.envs.rendering import EnvRenderer
-            F110Env.renderer = EnvRenderer(WINDOW_W, WINDOW_H)
-            F110Env.renderer.update_map(self.map_name, self.map_ext)
-            
-        F110Env.renderer.update_obs(self.render_obs)
-
-        for render_callback in F110Env.render_callbacks:
-            render_callback(F110Env.renderer)
-        
-        F110Env.renderer.dispatch_events()
-        F110Env.renderer.on_draw()
-        F110Env.renderer.flip()
-        if mode == 'human':
-            time.sleep(0.005)
-        elif mode == 'human_fast':
-            pass
+    def render(self, mode='human', colab_start=False):	
+        """	
+        Renders the environment with pyglet. Use mouse scroll in the window to zoom in/out, use mouse click drag to pan. Shows the agents, the map, current fps (bottom left corner), and the race information near as text.	
+        Args:	
+            mode (str, default='human'): rendering mode, currently supports:	
+                'human': slowed down rendering such that the env is rendered in a way that sim time elapsed is close to real time elapsed	
+                'human_fast': render as fast as possible	
+        Returns:	
+            None	
+        """	
+        assert mode in ['human', 'human_fast']	
+        if self.in_colab:	
+            if self.renderer is None:	
+                # first call, initialize everything	
+                from f110_gym.envs.rendering_colab import Colab	
+                self.renderer = Colab(self.map_name, self.map_ext, self.num_agents,	
+                                     [self.start_xs, self.start_ys, self.start_thetas],	
+                                     [self.params['width'], self.params['length']],	
+                                      self.timestep)	
+            elif colab_start:	
+                # reloading Colab display	
+                self.renderer.start([self.start_xs, self.start_ys, self.start_thetas],	
+                                    [self.params['width'], self.params['length']])	
+            else:	
+                # updating cars	
+                self.renderer.update_cars(self.poses_x, self.poses_y, self.poses_theta, self.done, mode)	
+        else:	
+            if self.renderer is None:	
+                # first call, initialize everything	
+                from f110_gym.envs.rendering import EnvRenderer	
+                self.renderer = EnvRenderer(WINDOW_W, WINDOW_H)	
+                self.renderer.update_map(self.map_name, self.map_ext)	
+            self.renderer.update_obs(self.current_obs)	
+            self.renderer.dispatch_events()	
+            self.renderer.on_draw()	
+            self.renderer.flip()	
+            if mode == 'human':	
+                time.sleep(0.005)	
+            elif mode == 'human_fast':	
+                pass
