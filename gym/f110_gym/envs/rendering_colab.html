@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .car {
+            width: var(--car-length);
+            height: var(--car-width);
+            position: absolute;
+            background-color: darkcyan;
+        }
+    </style>
+</head>
+
+<body>
+    <img id="map">"insert_cars_here"</img>
+    <script>
+        console.log("Starting screen setup...")
+        const listenerChannel = new BroadcastChannel("insert_channel_here");
+        const cars = document.getElementsByClassName("car");
+        var frame_counter = 0;
+        var batch_poses = {};
+        // set map image and car dimensions
+        document.getElementById("map").src = 'data:image/jpeg;base64,' + btoa("insert_binary_image_here");
+        document.documentElement.style.setProperty('--car-width', "insert_car_width_here" + "px");
+        document.documentElement.style.setProperty('--car-length', "insert_car_length_here" + "px");
+        // set starting poses
+        batch_poses[frame_counter] = "insert_start_poses_here";
+        // function for moving cars based off poses received
+        function updateCars() {
+            if (frame_counter in batch_poses) {
+                console.log(frame_counter);
+                var batch = batch_poses[frame_counter];
+                batch.forEach((car_pose, index) => {
+                    var car = cars[`car-${index}`];
+                    car.style.transform = "translate(" + (car_pose[0] - car.offsetWidth / 2) + "px, -" + car_pose[1] + "px) ";
+                    car.style.transform += "rotate(" + car_pose[2] + "rad)";
+                });
+                delete batch_poses[frame_counter++];
+            }
+            window.requestAnimationFrame(updateCars);
+        }
+        listenerChannel.onmessage = (msg) => msg.data.forEach((poses) => batch_poses[poses[0]] = poses[1]);
+        // basically an infinite loop to update the cars at 60fps
+        window.requestAnimationFrame(updateCars);
+    </script>
+</body>
+
+</html>
